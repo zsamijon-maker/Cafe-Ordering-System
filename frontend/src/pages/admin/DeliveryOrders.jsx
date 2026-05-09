@@ -154,24 +154,32 @@ const DeliveryOrders = () => {
         .admin-section { min-height: calc(100vh - 72px); padding: 28px 36px; background: linear-gradient(180deg,#0a0806 0%, #0f0c09 100%); color: rgba(255,255,255,0.92); font-family: 'DM Sans', sans-serif; }
         .admin-section h2 { font-family: 'Playfair Display', serif; color: #e8c97a; margin-bottom:12px }
 
-        .admin-filters { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px }
-        .admin-filters select, .admin-filters input { padding:8px 10px; border-radius:8px; background: rgba(255,255,255,0.02); border: 0.5px solid rgba(255,255,255,0.06); color: rgba(255,255,255,0.92); }
-        .btn-primary { padding:8px 12px; background: linear-gradient(135deg,#e8c97a,#f0d88e); border:none; border-radius:8px; color:#0f0c09; cursor:pointer; }
-        .btn-danger { padding:8px 12px; background: rgba(255,107,107,0.12); border: 0.5px solid rgba(255,107,107,0.18); color:#ff6b6b; border-radius:8px; cursor:pointer; }
+        .admin-filters { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px; align-items: center; }
+        .admin-filters select, .admin-filters input { padding:10px 12px; border-radius:8px; background: rgba(255,255,255,0.02); border: 0.5px solid rgba(255,255,255,0.06); color: rgba(255,255,255,0.92); flex: 1; min-width: 200px; }
+        .btn-primary { padding:10px 16px; background: linear-gradient(135deg,#e8c97a,#f0d88e); border:none; border-radius:8px; color:#0f0c09; cursor:pointer; font-weight: 500; }
+        .btn-danger { padding:10px 16px; background: rgba(255,107,107,0.12); border: 0.5px solid rgba(255,107,107,0.18); color:#ff6b6b; border-radius:8px; cursor:pointer; }
 
-        .orders-list { display:flex; flex-direction:column; gap:12px }
-        .order-card { background: rgba(255,255,255,0.02); border: 0.5px solid rgba(232,201,122,0.06); padding:14px; border-radius:10px; }
-        .order-card h4 { margin:0 0 6px; color: rgba(255,255,255,0.94) }
-        .order-card small { color: rgba(255,255,255,0.28); margin-left:8px }
+        .orders-list { display:grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap:16px; }
+        .order-card { background: rgba(255,255,255,0.02); border: 0.5px solid rgba(232,201,122,0.06); padding:16px; border-radius:10px; display: flex; flex-direction: column; }
+        .order-card h4 { margin:0 0 8px; color: rgba(255,255,255,0.94) }
+        .order-card small { color: rgba(255,255,255,0.28); display: block; margin-top: 4px; }
 
-        .order-actions { display:flex; gap:8px; margin-top:8px }
-        .order-actions select { padding:8px 10px; border-radius:8px; }
+        .order-actions { display:flex; gap:8px; margin-top:auto; padding-top: 12px; flex-wrap: wrap; }
+        .order-actions select { padding:8px 10px; border-radius:8px; flex: 1; }
+        .order-actions button { padding: 8px 12px; border-radius: 8px; cursor: pointer; border: none; font-size: 13px; font-weight: 500; flex: 1; }
+        .order-actions .btn { background: rgba(232,201,122,0.1); color: #e8c97a; }
 
         .modal-overlay { position:fixed; inset:0; background: rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center }
         .modal-proof { background:#13100d; padding:16px; border-radius:10px; max-width:90%; max-height:90%; border:0.5px solid rgba(232,201,122,0.08); }
         .modal-proof img{ max-width:100%; max-height:80vh; display:block }
 
-        @media (max-width:640px) { .admin-section{padding:20px} .order-card{padding:12px} }
+        @media (max-width:640px) { 
+          .admin-section{padding:20px 16px;} 
+          .order-card{padding:14px;} 
+          .orders-list { grid-template-columns: 1fr; }
+          .admin-filters select, .admin-filters input { min-width: 100%; box-sizing: border-box; }
+          .admin-filters button { width: 100%; }
+        }
       `}</style>
 
       <div className="admin-section">
@@ -203,20 +211,20 @@ const DeliveryOrders = () => {
           <div className="orders-list">
             {orders.map(order => (
               <div key={order.id} className="order-card">
-                <div style={{display:'flex',justifyContent:'space-between'}}>
+                <div style={{display:'flex',flexDirection:'column',gap:8}}>
                   <div>
                     <h4>{order.order_number} <small>{new Date(order.created_at).toLocaleString()}</small></h4>
-                    <p><strong>Customer:</strong> {order.customer_name} — <strong>Contact:</strong> {order.contact_number}</p>
-                    <p><strong>Address:</strong> {order.address} <br /><strong>Landmark:</strong> {order.landmark}</p>
+                    <p style={{margin:'4px 0'}}><strong>Customer:</strong> {order.customer_name} <br/> <strong>Contact:</strong> {order.contact_number}</p>
+                    <p style={{margin:'4px 0'}}><strong>Address:</strong> {order.address} <br /><strong>Landmark:</strong> {order.landmark}</p>
                   </div>
-                  <div style={{textAlign:'right'}}>
-                    <p><strong>Total:</strong> {formatCurrencyPHP(order.total_amount)}</p>
-                    <p><strong>Payment:</strong> {order.payment_method} / {order.payment_status || 'N/A'}</p>
-                    <div style={{display:'flex',alignItems:'center',gap:8,justifyContent:'flex-end'}}>
-                      <span className="order-status">{order.status}</span>
+                  <div>
+                    <p style={{margin:'4px 0'}}><strong>Total:</strong> {formatCurrencyPHP(order.total_amount)}</p>
+                    <p style={{margin:'4px 0'}}><strong>Payment:</strong> {order.payment_method} / {order.payment_status || 'N/A'}</p>
+                    <div style={{display:'flex',alignItems:'center',gap:8,margin:'6px 0'}}>
+                      <span className="order-status" style={{background: 'rgba(232,201,122,0.1)', color: '#e8c97a', padding: '4px 8px', borderRadius: 6, fontWeight: 600}}>{order.status}</span>
                     </div>
                     {order.status === 'Cancelled' && (
-                      <p><strong>Cancellation:</strong> {order.cancellation_reason || '—'}{order.cancellation_time && (
+                      <p style={{margin:'4px 0', color: '#ff6b6b'}}><strong>Cancellation:</strong> {order.cancellation_reason || '—'}{order.cancellation_time && (
                         <span> — {new Date(order.cancellation_time).toLocaleString()}</span>
                       )}</p>
                     )}

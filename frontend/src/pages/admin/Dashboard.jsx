@@ -143,6 +143,7 @@ const AdminDashboard = () => {
           align-items: flex-start;
           margin-bottom: 40px;
           gap: 24px;
+          flex-wrap: wrap;
         }
 
         .btn-delivery {
@@ -341,13 +342,18 @@ const AdminDashboard = () => {
           background: rgba(232,201,122,0.15);
         }
 
+        .table-responsive {
+          width: 100%;
+          overflow-x: auto;
+          border-radius: 12px;
+          border: 0.5px solid rgba(232,201,122,0.15);
+          background: linear-gradient(135deg, rgba(232,201,122,0.04) 0%, rgba(232,201,122,0.02) 100%);
+        }
+
         .admin-table {
           width: 100%;
-          background: linear-gradient(135deg, rgba(232,201,122,0.04) 0%, rgba(232,201,122,0.02) 100%);
-          border: 0.5px solid rgba(232,201,122,0.15);
-          border-radius: 12px;
+          min-width: 600px;
           border-collapse: collapse;
-          overflow: hidden;
         }
 
         .admin-table thead {
@@ -420,6 +426,14 @@ const AdminDashboard = () => {
           padding: 48px 24px;
           color: rgba(232,201,122,0.5);
           font-size: 14px;
+        }
+
+        @media (max-width: 768px) {
+          .admin-dashboard { padding: 24px 16px; }
+          .stats-grid { grid-template-columns: 1fr; }
+          .dashboard-header h1 { font-size: 32px; }
+          .form-wrapper { grid-template-columns: 1fr; }
+          .btn-delivery { width: 100%; justify-content: center; }
         }
       `}</style>
 
@@ -563,6 +577,7 @@ const AdminDashboard = () => {
           </form>
 
           {products.length > 0 ? (
+            <div className="table-responsive">
             <table className="admin-table">
               <thead>
                 <tr>
@@ -602,6 +617,7 @@ const AdminDashboard = () => {
                 ))}
               </tbody>
             </table>
+            </div>
           ) : (
             <div className="empty-state">
               No products yet. Add one to get started!

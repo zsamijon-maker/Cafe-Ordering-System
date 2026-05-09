@@ -79,12 +79,13 @@ const StaffManagement = () => {
         .staff-form input:focus { border-color: rgba(232,201,122,0.45); background: rgba(232,201,122,0.03) }
         .btn-primary { padding:10px 14px; background: linear-gradient(135deg,#e8c97a,#f0d88e); color:#0f0c09; border:none; border-radius:8px; cursor:pointer; margin-top:6px }
 
-        .staff-list { background: rgba(255,255,255,0.02); padding:14px; border-radius:10px; border:0.5px solid rgba(232,201,122,0.06) }
-        .admin-table { width:100%; border-collapse:collapse; }
-        .admin-table th, .admin-table td { padding:8px 10px; text-align:left; border-bottom: 0.5px solid rgba(255,255,255,0.03) }
-        .btn-danger { padding:8px 10px; background: rgba(255,107,107,0.12); color:#ff6b6b; border:0.5px solid rgba(255,107,107,0.18); border-radius:8px; cursor:pointer }
+        .staff-list { background: rgba(255,255,255,0.02); padding:14px; border-radius:10px; border:0.5px solid rgba(232,201,122,0.06); overflow-x: auto; }
+        .admin-table { width:100%; min-width: 500px; border-collapse:collapse; }
+        .admin-table th, .admin-table td { padding:10px 12px; text-align:left; border-bottom: 0.5px solid rgba(255,255,255,0.03) }
+        .btn-danger { padding:8px 12px; background: rgba(255,107,107,0.12); color:#ff6b6b; border:0.5px solid rgba(255,107,107,0.18); border-radius:8px; cursor:pointer; font-weight: 500; }
 
-        @media (max-width:900px){ .staff-grid{grid-template-columns:1fr} }
+        @media (max-width:900px){ .staff-grid{grid-template-columns:1fr; gap: 24px;} }
+        @media (max-width:640px){ .admin-section{padding: 24px 16px;} .staff-form{padding: 20px;} }
       `}</style>
 
       <section className="admin-section">

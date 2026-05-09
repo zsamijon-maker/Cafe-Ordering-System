@@ -127,8 +127,12 @@ const StaffDashboard = () => {
         .staff-dashboard { min-height: calc(100vh - 72px); padding:28px 36px; background: linear-gradient(180deg,#0a0806 0%, #0f0c09 100%); color: rgba(255,255,255,0.92); font-family: 'DM Sans', sans-serif }
         .staff-dashboard h1 { font-family:'Playfair Display', serif; color:#e8c97a; margin-bottom:12px }
 
-        .orders-list { display:flex; flex-direction:column; gap:12px }
-        .order-card { background: rgba(255,255,255,0.02); border: 0.5px solid rgba(232,201,122,0.06); padding:14px; border-radius:10px }
+        .orders-list { 
+          display: grid; 
+          grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); 
+          gap: 16px; 
+        }
+        .order-card { background: rgba(255,255,255,0.02); border: 0.5px solid rgba(232,201,122,0.06); padding:16px; border-radius:10px; display: flex; flex-direction: column; }
         .order-header { display:flex; justify-content:space-between; align-items:center }
         .order-header h3 { margin:0; }
         .order-status { background: rgba(232,201,122,0.08); color:#e8c97a; padding:6px 10px; border-radius:8px; font-weight:700 }
@@ -137,12 +141,17 @@ const StaffDashboard = () => {
         .order-items { margin-top:8px; display:flex; gap:8px; flex-wrap:wrap }
         .order-item { background: rgba(255,255,255,0.03); padding:6px 10px; border-radius:8px }
 
-        .order-actions { display:flex; gap:8px; margin-top:12px }
-        .btn-verify, .btn-preparing, .btn-ready, .btn-complete { padding:8px 12px; border-radius:8px; border:none; cursor:pointer }
+        .order-actions { display:flex; gap:8px; margin-top: auto; padding-top: 12px; flex-wrap: wrap; }
+        .btn-verify, .btn-preparing, .btn-ready, .btn-complete, .btn-reject { padding:8px 12px; border-radius:8px; border:none; cursor:pointer; flex: 1; text-align: center; font-size: 13px; font-weight: 500; }
         .btn-verify { background: linear-gradient(135deg,#e8c97a,#f0d88e); color:#0f0c09 }
         .btn-reject { background: rgba(255,107,107,0.12); color:#ff6b6b; border:0.5px solid rgba(255,107,107,0.18) }
 
-        @media (max-width:640px){ .staff-dashboard{padding:20px} .order-card{padding:12px} }
+        @media (max-width:640px){ 
+          .staff-dashboard{padding:20px 16px;} 
+          .orders-list { grid-template-columns: 1fr; }
+          .order-card{padding:14px;} 
+          .staff-dashboard select { width: 100%; box-sizing: border-box; padding: 10px; border-radius: 8px; margin-bottom: 8px; background: rgba(255,255,255,0.04); color: white; border: 0.5px solid rgba(255,255,255,0.1); }
+        }
       `}</style>
 
       <div className="staff-dashboard">
