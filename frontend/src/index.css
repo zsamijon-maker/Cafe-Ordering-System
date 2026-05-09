@@ -208,11 +208,10 @@ body {
 .admin-table {
   width: 100%;
   border-collapse: collapse;
-  background: white;
 }
 
 .admin-table th, .admin-table td {
   padding: 12px;
   text-align: left;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
 }

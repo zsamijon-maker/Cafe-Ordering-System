@@ -234,6 +234,7 @@ const Login = () => {
         .brule-input:-webkit-autofill:focus,
         .brule-input:-webkit-autofill:hover,
         .brule-input:-webkit-autofill:active {
+          color-scheme: dark;
           -webkit-text-fill-color: rgba(255,255,255,0.85) !important;
           -webkit-box-shadow: 0 0 0px 1000px #13100d inset !important;
           box-shadow: 0 0 0px 1000px #13100d inset !important;
