@@ -13,7 +13,7 @@ const schemas = {
     price: Joi.number().min(0).required(),
     category_id: Joi.string().uuid().allow(null),
     stock: Joi.number().integer().min(0).default(0),
-    status: Joi.string().valid('active', 'out_of_stock', 'archived').default('active'),
+    status: Joi.string().valid('available', 'out_of_stock', 'archived').default('available'),
     image_url: Joi.string().uri().allow('', null),
   }),
 
@@ -23,7 +23,7 @@ const schemas = {
     price: Joi.number().min(0),
     category_id: Joi.string().uuid().allow(null),
     stock: Joi.number().integer().min(0),
-    status: Joi.string().valid('active', 'out_of_stock', 'archived'),
+    status: Joi.string().valid('available', 'out_of_stock', 'archived'),
     image_url: Joi.string().uri().allow('', null),
   }),
 
