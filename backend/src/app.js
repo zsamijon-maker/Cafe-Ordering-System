@@ -59,11 +59,10 @@ app.use('/api', (req, res, next) => {
   req.url = newPath;
   next();
 });
-
-// API Version 1 Routes
 // Hotfix: also mount key public endpoints at /api/* to support callers using /api/* (pre-rewrite compatibility)
 app.use('/api/products', productRoutes);
 
+// API Version 1 Routes
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/products', productRoutes);
 app.use('/api/v1/orders', orderRoutes);
