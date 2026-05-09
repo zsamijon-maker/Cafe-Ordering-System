@@ -53,12 +53,17 @@ app.use(express.json({ limit: '10kb' })); // Limit body size for security
 
 // Backward compatibility - redirect /api/* to /api/v1/*
 app.use('/api', (req, res, next) => {
-  const newPath = req.path.replace(/^\/api/, '/api/v1');
+  // req.path here is the path relative to the mount point ('/api'),
+  // so rebuild the target as '/api/v1' + req.path to ensure correct routing.
+  const newPath = `/api/v1${req.path}`;
   req.url = newPath;
   next();
 });
 
 // API Version 1 Routes
+// Hotfix: also mount key public endpoints at /api/* to support callers using /api/* (pre-rewrite compatibility)
+app.use('/api/products', productRoutes);
+
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/products', productRoutes);
 app.use('/api/v1/orders', orderRoutes);
