@@ -14,7 +14,9 @@ const StaffDashboard = () => {
   const fetchOrders = async () => {
     try {
       const res = await API.get('/orders');
-      setOrders(res.data);
+      const payload = res.data;
+      const orders = Array.isArray(payload) ? payload : (payload && payload.data) ? payload.data : [];
+      setOrders(orders);
     } catch (err) {
       const status = err?.response?.status;
       if (status === 401) {

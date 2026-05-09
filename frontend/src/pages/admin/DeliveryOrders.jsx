@@ -15,7 +15,8 @@ const DeliveryOrders = () => {
     setLoading(true);
     try {
       const res = await API.get('/orders');
-      let data = res.data || [];
+      const payload = res.data;
+      let data = Array.isArray(payload) ? payload : (payload && payload.data) ? payload.data : [];
       // filter for Delivery
       data = data.filter(o => o.order_type === 'Delivery');
 
