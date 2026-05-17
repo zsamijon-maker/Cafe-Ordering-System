@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { Client } = require('pg');
+require('dotenv').config();
 
 async function run() {
   const migrationsDir = path.resolve(__dirname, '../../../migrations');
