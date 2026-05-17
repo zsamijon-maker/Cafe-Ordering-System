@@ -16,10 +16,23 @@ const Checkout = () => {
   const [landmark, setLandmark] = useState('');
   const [contactNumber, setContactNumber] = useState('');
   const [notes, setNotes] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState('Cash on Delivery');
+  const [paymentMethod, setPaymentMethod] = useState('Cash');
   const [paymentReference, setPaymentReference] = useState('');
   const [paymentProofFile, setPaymentProofFile] = useState(null);
   const navigate = useNavigate();
+
+  // Adjust payment method when order type changes
+  useEffect(() => {
+    if (orderType === 'Dine-in' || orderType === 'Pickup') {
+      if (paymentMethod === 'Cash on Delivery') {
+        setPaymentMethod('Cash');
+      }
+    } else if (orderType === 'Delivery') {
+      if (paymentMethod === 'Cash') {
+        setPaymentMethod('Cash on Delivery');
+      }
+    }
+  }, [orderType]);
 
   // Calculate total with delivery fee
   const calculateTotal = () => {
@@ -180,7 +193,11 @@ const Checkout = () => {
           <div className="form-group">
             <label>Payment Method</label>
             <select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)}>
-              <option value="Cash on Delivery">Cash on Delivery</option>
+              {orderType === 'Delivery' ? (
+                <option value="Cash on Delivery">Cash on Delivery</option>
+              ) : (
+                <option value="Cash">Cash</option>
+              )}
               <option value="GCash">GCash</option>
               <option value="Maya">Maya</option>
               <option value="Card">Card</option>
@@ -188,16 +205,17 @@ const Checkout = () => {
           </div>
 
           {(paymentMethod === 'GCash' || paymentMethod === 'Maya' || paymentMethod === 'Card') && (
-            <>
-              <div className="form-group">
-                <label>Reference Number</label>
-                <input type="text" value={paymentReference} onChange={(e) => setPaymentReference(e.target.value)} required />
-              </div>
-              <div className="form-group">
-                <label>Upload Payment Screenshot</label>
-                <input type="file" accept="image/*" onChange={(e) => setPaymentProofFile(e.target.files[0])} required />
-              </div>
-            </>
+            <div className="form-group">
+              <label>Reference Number</label>
+              <input type="text" value={paymentReference} onChange={(e) => setPaymentReference(e.target.value)} required />
+            </div>
+          )}
+
+          {(paymentMethod === 'GCash' || paymentMethod === 'Maya') && (
+            <div className="form-group">
+              <label>Upload Payment Screenshot</label>
+              <input type="file" accept="image/*" onChange={(e) => setPaymentProofFile(e.target.files[0])} required />
+            </div>
           )}
           <div className="order-summary">
             <h3>Order Total: {formatCurrencyPHP(calculateTotal())}</h3>
