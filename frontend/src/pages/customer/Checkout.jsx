@@ -4,6 +4,7 @@ import { CartContext } from '../../context/CartContext';
 import API from '../../services/api';
 import toast from 'react-hot-toast';
 import formatCurrencyPHP from '../../utils/currency';
+import { queryClient } from '../../lib/queryClient';
 
 const DELIVERY_FEE = 35; // Fixed delivery fee in PHP
 
@@ -81,6 +82,8 @@ const Checkout = () => {
       const createdOrder = res.data;
       toast.success('Order placed successfully!');
       clearCart();
+      // Ensure menu/products data is refreshed to reflect reduced stock
+      try { queryClient.invalidateQueries(['products']); } catch (e) { console.warn('Failed to invalidate products query', e); }
       // Navigate to track page with order number
       if (createdOrder && createdOrder.order_number) {
         navigate(`/track/${createdOrder.order_number}`);

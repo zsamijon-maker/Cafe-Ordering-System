@@ -246,6 +246,12 @@ const createOrder = async (req, res, next) => {
           .eq('id', item.product_id)
       );
       await Promise.all(updatePromises);
+      // Invalidate product cache so API returns fresh stock values
+      try {
+        cache.flushAll();
+      } catch (e) {
+        console.warn('Failed to flush cache after stock deduction', e?.message || e);
+      }
     }
 
     res.status(201).json(order);
@@ -481,6 +487,12 @@ const cancelOrder = async (req, res, next) => {
               .update({ stock: newStock })
               .eq('id', item.product_id);
           }
+        }
+        // Invalidate product cache so API returns fresh stock values after restore
+        try {
+          cache.flushAll();
+        } catch (e) {
+          console.warn('Failed to flush cache after stock restore', e?.message || e);
         }
       }
     } catch (stockErr) {

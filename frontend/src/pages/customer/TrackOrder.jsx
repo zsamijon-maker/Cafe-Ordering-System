@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import API from '../../services/api';
 import toast from 'react-hot-toast';
+import { queryClient } from '../../lib/queryClient';
 import formatCurrencyPHP from '../../utils/currency';
 
 const TrackOrder = () => {
@@ -55,6 +56,8 @@ const TrackOrder = () => {
       setCancelLoading(true);
       await API.put(`/orders/${order.id}/cancel`, { reason: cancelReason });
       toast.success('Order cancelled');
+      // Ensure product list updates to reflect restored stock
+      try { queryClient.invalidateQueries(['products']); } catch (e) { console.warn('Failed to invalidate products query', e); }
       setShowCancel(false);
       setCancelReason('');
       fetchOrder(order.order_number);
