@@ -23,8 +23,12 @@ const Menu = () => {
   }
 
   const handleAddToCart = (product) => {
-    addToCart(product);
-    toast.success(`${product.name} added to cart`);
+    const added = addToCart(product);
+    if (added) {
+      toast.success(`${product.name} added to cart`);
+    } else {
+      toast.error(`${product.name} is out of stock or reached maximum quantity`);
+    }
   };
 
   if (isLoading) {
@@ -152,23 +156,30 @@ const Menu = () => {
         <div className="menu-content">
           <h1>Our Menu</h1>
         <div className="product-grid">
-          {products.map((product) => (
-            <div key={product.id} className="product-card">
-              <img src={product.image_url || 'https://via.placeholder.com/150'} alt={product.name} loading="lazy" />
-              <h3>{product.name}</h3>
-              <p>{product.description}</p>
-              <div className="product-footer">
-                <span className="price">{formatCurrencyPHP(product.price)}</span>
-                <button 
-                  onClick={() => handleAddToCart(product)}
-                  className="btn-add"
-                  disabled={product.status === 'out_of_stock'}
-                >
-                  {product.status === 'out_of_stock' ? 'Out of Stock' : 'Add to Cart'}
-                </button>
+          {products.map((product) => {
+            const stock = product.stock ?? product.inventory ?? product.quantity_available ?? null;
+            const outOfStock = stock != null ? stock <= 0 : product.status === 'out_of_stock';
+            return (
+              <div key={product.id} className="product-card">
+                <img src={product.image_url || 'https://via.placeholder.com/150'} alt={product.name} loading="lazy" />
+                <h3>{product.name}</h3>
+                <p>{product.description}</p>
+                <div style={{ fontSize: 13, color: 'rgba(232,201,122,0.6)', marginBottom: 6 }}>
+                  Stock: {stock == null ? 'N/A' : stock}
+                </div>
+                <div className="product-footer">
+                  <span className="price">{formatCurrencyPHP(product.price)}</span>
+                  <button 
+                    onClick={() => handleAddToCart(product)}
+                    className="btn-add"
+                    disabled={outOfStock}
+                  >
+                    {outOfStock ? 'Out of Stock' : 'Add to Cart'}
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
         </div>
       </div>

@@ -5,7 +5,7 @@ import { FaTrash } from 'react-icons/fa';
 import formatCurrencyPHP from '../../utils/currency';
 
 const Cart = () => {
-  const { cart, removeFromCart, totalAmount } = useContext(CartContext);
+  const { cart, removeFromCart, updateQuantity, totalAmount } = useContext(CartContext);
 
   if (cart.length === 0) {
     return (
@@ -115,20 +115,44 @@ const Cart = () => {
         <div className="cart-content">
           <h1>Your Cart</h1>
         <div className="cart-items">
-          {cart.map((item) => (
-            <div key={item.id} className="cart-item">
-              <div className="item-info">
-                <h3>{item.name}</h3>
-                <p>{formatCurrencyPHP(item.price)} x {item.quantity}</p>
+          {cart.map((item) => {
+            const stock = item.stock ?? item.inventory ?? item.quantity_available ?? null;
+            const canIncrease = stock == null ? true : item.quantity < stock;
+            return (
+              <div key={item.id} className="cart-item">
+                <div className="item-info">
+                  <h3>{item.name}</h3>
+                  <p style={{ marginBottom: 8 }}>{formatCurrencyPHP(item.price)} x {item.quantity}</p>
+                  <div style={{ fontSize: 13, color: 'rgba(232,201,122,0.6)' }}>
+                    Stock: {stock == null ? 'N/A' : stock}
+                  </div>
+                </div>
+                <div className="item-actions">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <button
+                      onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
+                      className="btn-delete"
+                    >
+                      -
+                    </button>
+                    <div style={{ minWidth: 28, textAlign: 'center' }}>{item.quantity}</div>
+                    <button
+                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                      className="btn-add"
+                      disabled={!canIncrease}
+                      style={{ padding: '6px 10px' }}
+                    >
+                      +
+                    </button>
+                  </div>
+                  <span>{formatCurrencyPHP(item.price * item.quantity)}</span>
+                  <button onClick={() => removeFromCart(item.id)} className="btn-delete">
+                    <FaTrash />
+                  </button>
+                </div>
               </div>
-              <div className="item-actions">
-                <span>{formatCurrencyPHP(item.price * item.quantity)}</span>
-                <button onClick={() => removeFromCart(item.id)} className="btn-delete">
-                  <FaTrash />
-                </button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
         <div className="cart-summary">
           <h2>Total: {formatCurrencyPHP(totalAmount)}</h2>
