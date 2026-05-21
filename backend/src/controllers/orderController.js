@@ -15,10 +15,47 @@ const allowedTransitions = {
   Cancelled: []
 };
 
-// Role permission matrix for certain transitions (defaults to both roles)
-// e.g., Delivered -> Completed is admin-only by default
-const transitionRoleRequirements = {
-  'Delivered:Completed': ['admin']
+// Role permission matrix for specific transitions (empty = admin and staff)
+const transitionRoleRequirements = {};
+
+const findProductById = (products, productId) =>
+  products.find(p => String(p.id) === String(productId));
+
+const deductProductStock = async (items, products) => {
+  for (const item of items) {
+    const product = findProductById(products, item.product_id);
+    if (!product) {
+      throw new Error(`Product not found for stock deduction: ${item.product_id}`);
+    }
+
+    const currentStock = Number(product.stock) || 0;
+    const newStock = Math.max(0, currentStock - item.quantity);
+    const updatePayload = { stock: newStock };
+    if (newStock <= 0) {
+      updatePayload.status = 'out_of_stock';
+    }
+
+    const { data: updatedRows, error: updateError } = await supabase
+      .from('products')
+      .update(updatePayload)
+      .eq('id', product.id)
+      .select('id, stock, status');
+
+    if (updateError) {
+      throw new Error(`Failed to deduct stock for product ${product.id}: ${updateError.message}`);
+    }
+    if (!updatedRows || updatedRows.length === 0) {
+      throw new Error(
+        `Stock update returned no rows for product ${product.id}. Check Supabase RLS or use SUPABASE_SERVICE_ROLE_KEY on the server.`
+      );
+    }
+  }
+
+  try {
+    cache.flushAll();
+  } catch (e) {
+    console.warn('Failed to flush cache after stock deduction', e?.message || e);
+  }
 };
 
 const getOrders = async (req, res, next) => {
@@ -139,7 +176,7 @@ const createOrder = async (req, res, next) => {
     const insufficientStockItems = [];
 
     for (const item of items) {
-      const product = products.find(p => p.id === item.product_id);
+      const product = findProductById(products, item.product_id);
       if (!product) {
         outOfStockItems.push({ product_id: item.product_id, message: 'Product not found' });
       } else if (product.status === 'out_of_stock') {
@@ -227,31 +264,17 @@ const createOrder = async (req, res, next) => {
 
     if (itemsError) throw itemsError;
 
-    // 3. Batch deduct stock using RPC for atomic operation
-    const stockDeductions = items.map(item => {
-      const product = products.find(p => p.id === item.product_id);
-      return {
-        product_id: item.product_id,
-        quantity: item.quantity,
-        current_stock: product?.stock || 0
-      };
-    }).filter(item => item.current_stock > 0);
-
-    if (stockDeductions.length > 0) {
-      // Use batch update via multiple single calls (more reliable than RPC for this case)
-      const updatePromises = stockDeductions.map(item =>
-        supabase
-          .from('products')
-          .update({ stock: item.current_stock - item.quantity })
-          .eq('id', item.product_id)
-      );
-      await Promise.all(updatePromises);
-      // Invalidate product cache so API returns fresh stock values
-      try {
-        cache.flushAll();
-      } catch (e) {
-        console.warn('Failed to flush cache after stock deduction', e?.message || e);
-      }
+    // 3. Deduct stock for each ordered item (fail loudly if update is blocked)
+    try {
+      await deductProductStock(items, products);
+    } catch (stockErr) {
+      console.error('Stock deduction failed, rolling back order', stockErr.message || stockErr);
+      await supabase.from('order_items').delete().eq('order_id', order.id);
+      await supabase.from('orders').delete().eq('id', order.id);
+      return res.status(500).json({
+        message: 'Order could not be completed because stock could not be updated',
+        detail: stockErr.message
+      });
     }
 
     res.status(201).json(order);

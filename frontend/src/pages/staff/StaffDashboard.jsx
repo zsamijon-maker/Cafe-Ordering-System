@@ -270,11 +270,7 @@ const StaffDashboard = () => {
                   )}
 
                   {order.status === 'Delivered' && (
-                    user && user.role === 'admin' ? (
-                      <button disabled={updatingIds.includes(order.id)} onClick={() => updateStatus(order.id, 'Completed')} className="btn-complete">Complete Order</button>
-                    ) : (
-                      <button onClick={() => toast('Waiting for admin to finalize delivery')} className="btn-complete">Awaiting Completion</button>
-                    )
+                    <button disabled={updatingIds.includes(order.id)} onClick={() => updateStatus(order.id, 'Completed')} className="btn-complete">Complete Order</button>
                   )}
 
                   {/* generic actions dropdown for other allowed transitions */}
