@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
 import { CartContext } from '../../context/CartContext';
 import { FaShoppingCart, FaUser, FaSignOutAlt } from 'react-icons/fa';
@@ -8,6 +8,14 @@ const Navbar = () => {
   const { user, logout } = useContext(AuthContext);
   const { cart } = useContext(CartContext);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const navLinkClass = (path) => {
+    const isActive = path === '/'
+      ? location.pathname === '/'
+      : location.pathname === path || location.pathname.startsWith(`${path}/`);
+    return isActive ? 'nav-link active' : 'nav-link';
+  };
 
   const handleLogout = () => {
     logout();
@@ -53,23 +61,27 @@ const Navbar = () => {
 
         .nav-links {
           display: flex;
-          gap: 32px;
+          gap: 28px;
           align-items: center;
         }
 
-        .nav-links a {
+        /* Override global index.css .navbar a { color: white } */
+        .navbar .nav-links .nav-link {
           font-size: 13px;
           font-weight: 500;
           letter-spacing: 0.08em;
           text-transform: uppercase;
           color: rgba(232,201,122,0.7);
           text-decoration: none;
-          transition: all 0.2s;
+          transition: color 0.2s, transform 0.2s;
           position: relative;
           padding: 8px 0;
+          margin: 0;
+          line-height: 1.2;
+          white-space: nowrap;
         }
 
-        .nav-links a::after {
+        .navbar .nav-links .nav-link::after {
           content: '';
           position: absolute;
           bottom: 0;
@@ -80,12 +92,24 @@ const Navbar = () => {
           transition: width 0.2s;
         }
 
-        .nav-links a:hover {
+        .navbar .nav-links .nav-link:hover,
+        .navbar .nav-links .nav-link.active {
           color: #e8c97a;
         }
 
-        .nav-links a:hover::after {
+        .navbar .nav-links .nav-link:hover::after,
+        .navbar .nav-links .nav-link.active::after {
           width: 100%;
+        }
+
+        .navbar .nav-links .nav-link.cart-link {
+          padding: 8px 10px;
+          text-transform: none;
+          letter-spacing: 0;
+        }
+
+        .navbar .nav-links .nav-link.cart-link::after {
+          display: none;
         }
 
         .cart-link {
@@ -94,12 +118,9 @@ const Navbar = () => {
           align-items: center;
           justify-content: center;
           gap: 6px;
-          padding: 8px;
           border-radius: 8px;
           background: transparent;
-          transition: all 0.18s;
-          color: rgba(232,201,122,0.95);
-          border: 1px solid rgba(232,201,122,0.06);
+          border: 1px solid rgba(232,201,122,0.12);
         }
 
         .cart-link svg {
@@ -179,7 +200,7 @@ const Navbar = () => {
             flex-wrap: wrap;
           }
 
-          .nav-links a {
+          .navbar .nav-links .nav-link {
             font-size: 11px;
           }
 
@@ -203,7 +224,7 @@ const Navbar = () => {
             flex-wrap: wrap;
           }
 
-          .nav-links a {
+          .navbar .nav-links .nav-link {
             font-size: 10px;
           }
         }
@@ -217,25 +238,26 @@ const Navbar = () => {
           {/* Show Menu/Cart only to customers (unauthenticated users or users without admin/staff roles) */}
           {(!user || (user && !['admin', 'staff'].includes(user.role))) && (
             <>
-              <Link to="/menu">Menu</Link>
-              <Link to="/about">About Us</Link>
-              <Link to="/cart" className="cart-link">
+              <Link to="/" className={navLinkClass('/')}>Home</Link>
+              <Link to="/menu" className={navLinkClass('/menu')}>Menu</Link>
+              <Link to="/about" className={navLinkClass('/about')}>About Us</Link>
+              <Link to="/cart" className={`${navLinkClass('/cart')} cart-link`}>
                 <FaShoppingCart />
                 {cart.length > 0 && <span className="cart-count">{cart.length}</span>}
               </Link>
-              <Link to="/track">Track Order</Link>
+              <Link to="/track" className={navLinkClass('/track')}>Track Order</Link>
             </>
           )}
           
           {user ? (
             <>
-              {user.role === 'admin' && <Link to="/admin">Admin</Link>}
-              {user.role === 'staff' && <Link to="/staff">Staff</Link>}
+              {user.role === 'admin' && <Link to="/admin" className={navLinkClass('/admin')}>Admin</Link>}
+              {user.role === 'staff' && <Link to="/staff" className={navLinkClass('/staff')}>Staff</Link>}
               <span className="user-info"><FaUser /> {user.name}</span>
               <button onClick={handleLogout} className="logout-btn"><FaSignOutAlt /></button>
             </>
           ) : (
-            <Link to="/login">Login</Link>
+            <Link to="/login" className={navLinkClass('/login')}>Login</Link>
           )}
         </div>
       </nav>

@@ -5,12 +5,26 @@ const About = () => {
   return (
     <>
       <style>{`
+        .about-page {
+          font-family: 'DM Sans', sans-serif;
+          background: linear-gradient(180deg, #0a0806 0%, #0f0c09 100%);
+          min-height: calc(100vh - 72px);
+          margin: -24px -20px 0;
+          padding: 28px 36px 48px;
+          color: rgba(255,255,255,0.9);
+        }
+
+        .about-inner {
+          max-width: 1200px;
+          margin: 0 auto;
+        }
+
         .about-hero {
           display:flex;
           align-items:center;
           justify-content:space-between;
           gap:24px;
-          margin: 28px 0 20px;
+          margin: 0 0 20px;
         }
 
         .about-title {
@@ -62,9 +76,14 @@ const About = () => {
           .about-hero { flex-direction:column; align-items:flex-start }
           .profiles { grid-template-columns: 1fr }
         }
+
+        @media (max-width: 640px) {
+          .about-page { padding: 20px 16px 40px; }
+        }
       `}</style>
 
-      <div style={{marginTop:20}}>
+      <div className="about-page">
+        <div className="about-inner">
         <div className="about-hero">
           <div>
             <h1 className="about-title">About Us</h1>
@@ -91,6 +110,7 @@ const About = () => {
               <p>3rd Year Computer Science Student. Focused on front-end design, accessibility, and creating consistent, polished interfaces.</p>
             </div>
           </div>
+        </div>
         </div>
       </div>
     </>

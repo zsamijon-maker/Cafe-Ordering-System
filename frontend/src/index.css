@@ -32,7 +32,8 @@ body {
   align-items: center;
 }
 
-.navbar a {
+/* Nav link styles live in Navbar.jsx — avoid overriding component styles */
+.navbar a:not(.nav-link) {
   color: var(--white);
   text-decoration: none;
   margin-left: 1.5rem;

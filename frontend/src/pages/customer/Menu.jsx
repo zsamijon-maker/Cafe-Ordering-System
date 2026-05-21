@@ -51,6 +51,7 @@ const Menu = () => {
           font-family: 'DM Sans', sans-serif;
           background: linear-gradient(180deg, #0a0806 0%, #0f0c09 100%);
           min-height: calc(100vh - 72px);
+          margin: -24px -20px 0;
           padding: 28px 36px;
           color: rgba(255,255,255,0.9);
         }
