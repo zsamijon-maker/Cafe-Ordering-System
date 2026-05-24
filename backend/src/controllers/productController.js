@@ -1,4 +1,5 @@
 const supabase = require('../config/supabase');
+const { v4: uuidv4 } = require('uuid');
 const { cache, CACHE_TTL, getProductCacheKey } = require('../services/cache');
 
 const getProducts = async (req, res, next) => {
@@ -95,10 +96,6 @@ const deleteProduct = async (req, res, next) => {
     next(err);
   }
 };
-
-module.exports = { getProducts, createProduct, updateProduct, deleteProduct };
-
-const { v4: uuidv4 } = require('uuid');
 
 const uploadProductImage = async (req, res, next) => {
   try {

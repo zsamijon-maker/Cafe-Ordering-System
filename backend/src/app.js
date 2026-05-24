@@ -10,7 +10,7 @@ const orderRoutes = require('./routes/orderRoutes');
 const staffRoutes = require('./routes/staffRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 const { errorMiddleware } = require('./middleware/errorMiddleware');
-const { authLimiter, apiLimiter } = require('./middleware/rateLimiter');
+const { authLimiter, apiLimiter, orderLimiter } = require('./middleware/rateLimiter');
 
 const app = express();
 

@@ -1,4 +1,5 @@
 const Joi = require('joi');
+const { ORDER_STATUSES, PAYMENT_STATUSES, ORDER_TYPES, ROLE } = require('../constants');
 
 // Validation schemas
 const schemas = {
@@ -36,7 +37,7 @@ const schemas = {
     })).min(1).required(),
     total_amount: Joi.number().min(0).required(),
     payment_method: Joi.string().valid('Cash', 'GCash', 'Maya', 'Card', 'Cash on Delivery').required(),
-    order_type: Joi.string().valid('Pickup', 'Delivery', 'Dine-in').default('Pickup'),
+    order_type: Joi.string().valid(...ORDER_TYPES).default('Pickup'),
     address: Joi.when('order_type', {
       is: 'Delivery',
       then: Joi.string().min(3).required(),
@@ -62,13 +63,19 @@ const schemas = {
     }),
   }),
 
+  createStaff: Joi.object({
+    name: Joi.string().min(1).max(255).required(),
+    username: Joi.string().min(3).max(50).required(),
+    password: Joi.string().min(6).max(128).required(),
+  }),
+
   updateOrderStatus: Joi.object({
-    status: Joi.string().valid('Pending', 'Preparing', 'Ready for Pickup', 'Served', 'Out for Delivery', 'Delivered', 'Completed', 'Cancelled').required(),
+    status: Joi.string().valid(...ORDER_STATUSES).required(),
     note: Joi.string().allow('', null),
   }),
 
   verifyPayment: Joi.object({
-    payment_status: Joi.string().valid('Paid', 'Rejected', 'Pending Verification'),
+    payment_status: Joi.string().valid(...PAYMENT_STATUSES),
     payment_reference: Joi.string().allow('', null),
   }),
 };

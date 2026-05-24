@@ -25,8 +25,6 @@ const Navbar = () => {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap');
-
         .navbar {
           background: linear-gradient(135deg, #0f0c09 0%, #13100d 100%);
           border-bottom: 0.5px solid rgba(232,201,122,0.15);

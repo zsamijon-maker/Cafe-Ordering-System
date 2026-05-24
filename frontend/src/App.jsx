@@ -53,30 +53,14 @@ function App() {
       <AuthProvider>
         <CartProvider>
           <Router>
-          <style>{`
-            @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap');
 
-            :root { --bg-root: #0a0806; --bg-panel: #0f0c09; --gold: #e8c97a; --muted-gold: rgba(232,201,122,0.7); }
-
-            .container {
-              max-width: 1200px;
-              margin: 24px auto;
-              padding: 0 20px;
-              box-sizing: border-box;
-            }
-
-            body { background: linear-gradient(180deg, var(--bg-root), var(--bg-panel)); color: rgba(255,255,255,0.9); font-family: 'DM Sans', sans-serif; }
-
-            /* small helpers used across pages */
-            .btn-primary { padding: 8px 12px; background: linear-gradient(135deg,var(--gold),#f0d88e); border-radius:8px; border:none; color:#0f0c09; cursor:pointer }
-            .btn-danger { padding:8px 12px; background: rgba(255,107,107,0.12); border-radius:8px; border:0.5px solid rgba(255,107,107,0.18); color:#ff6b6b }
-          `}</style>
           <Navbar />
           <div className="container">
             <Suspense fallback={<Loading />}>
               <Routes>
-              {/* Customer Routes */}
-              <Route path="/" element={<CustomerRoute><Home /></CustomerRoute>} />
+              {/* Home page is public for everyone */}
+              <Route path="/" element={<Home />} />
+              {/* Customer-only routes — redirect admin/staff away */}
               <Route path="/menu" element={<CustomerRoute><Menu /></CustomerRoute>} />
               <Route path="/about" element={<CustomerRoute><About /></CustomerRoute>} />
               <Route path="/cart" element={<CustomerRoute><Cart /></CustomerRoute>} />

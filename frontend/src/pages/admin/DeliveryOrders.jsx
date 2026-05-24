@@ -3,6 +3,7 @@ import API from '../../services/api';
 import toast from 'react-hot-toast';
 import { AuthContext } from '../../context/AuthContext';
 import formatCurrencyPHP from '../../utils/currency';
+import { ALLOWED_TRANSITIONS, ORDER_STATUS } from '../../constants/orderStatus';
 
 const DeliveryOrders = () => {
   const [orders, setOrders] = useState([]);
@@ -44,35 +45,20 @@ const DeliveryOrders = () => {
   useEffect(() => {
     fetchOrders();
     const iv = setInterval(fetchOrders, 30000);
-    // Listen for order updates from other tabs (e.g. staff marking Out for Delivery)
     const onStorage = (e) => {
       if (!e) return;
       try {
         if (e.key === 'order_update') {
-          // refresh orders to reflect changes made elsewhere
           fetchOrders();
         }
-      } catch (err) {
-        // ignore
-      }
-    };
-    window.addEventListener('storage', onStorage);
-    return () => clearInterval(iv);
-    // cleanup storage listener
-    // (note: returning a single cleanup; ensure listener removal)
-  }, [filters]);
-
-  // remove storage listener on unmount
-  useEffect(() => {
-    const onStorage = (e) => {
-      if (!e) return;
-      try {
-        if (e.key === 'order_update') fetchOrders();
       } catch (err) {}
     };
     window.addEventListener('storage', onStorage);
-    return () => window.removeEventListener('storage', onStorage);
-  }, []);
+    return () => {
+      clearInterval(iv);
+      window.removeEventListener('storage', onStorage);
+    };
+  }, [filters]);
 
   const handleVerify = async (orderId) => {
     try {
@@ -126,17 +112,6 @@ const DeliveryOrders = () => {
     }
   };
 
-  const allowedTransitions = {
-    Pending: ['Preparing', 'Cancelled'],
-    Preparing: ['Ready for Pickup', 'Served', 'Out for Delivery', 'Cancelled'],
-    'Ready for Pickup': ['Completed', 'Cancelled'],
-    'Served': ['Completed', 'Cancelled'],
-    'Out for Delivery': ['Delivered'],
-    Delivered: ['Completed'],
-    Completed: [],
-    Cancelled: []
-  };
-
   const { user } = useContext(AuthContext);
 
   const statusOptionsFor = (order) => {
@@ -149,8 +124,6 @@ const DeliveryOrders = () => {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap');
-
         .admin-section { min-height: calc(100vh - 72px); padding: 28px 36px; background: linear-gradient(180deg,#0a0806 0%, #0f0c09 100%); color: rgba(255,255,255,0.92); font-family: 'DM Sans', sans-serif; }
         .admin-section h2 { font-family: 'Playfair Display', serif; color: #e8c97a; margin-bottom:12px }
 
@@ -223,7 +196,7 @@ const DeliveryOrders = () => {
                     <div style={{display:'flex',alignItems:'center',gap:8,margin:'6px 0'}}>
                       <span className="order-status" style={{background: 'rgba(232,201,122,0.1)', color: '#e8c97a', padding: '4px 8px', borderRadius: 6, fontWeight: 600}}>{order.status}</span>
                     </div>
-                    {order.status === 'Cancelled' && (
+                    {order.status === ORDER_STATUS.CANCELLED && (
                       <p style={{margin:'4px 0', color: '#ff6b6b'}}><strong>Cancellation:</strong> {order.cancellation_reason || '—'}{order.cancellation_time && (
                         <span> — {new Date(order.cancellation_time).toLocaleString()}</span>
                       )}</p>
@@ -243,9 +216,9 @@ const DeliveryOrders = () => {
                     </>
                   )}
 
-                  <select disabled={updatingIds.includes(order.id) || (allowedTransitions[order.status]||[]).length===0} value="" onChange={(e) => handleStatusChange(order.id, e.target.value)}>
+                  <select disabled={updatingIds.includes(order.id) || (ALLOWED_TRANSITIONS[order.status]||[]).length===0} value="" onChange={(e) => handleStatusChange(order.id, e.target.value)}>
                     <option value="">Status: {order.status}</option>
-                    {(allowedTransitions[order.status] || []).map(s => (
+                    {(ALLOWED_TRANSITIONS[order.status] || []).map(s => (
                       <option key={s} value={s}>{s}</option>
                     ))}
                   </select>

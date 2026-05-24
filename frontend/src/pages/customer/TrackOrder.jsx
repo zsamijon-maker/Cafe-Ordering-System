@@ -4,6 +4,7 @@ import API from '../../services/api';
 import toast from 'react-hot-toast';
 import { queryClient } from '../../lib/queryClient';
 import formatCurrencyPHP from '../../utils/currency';
+import { ORDER_STATUS, PAYMENT_STATUS } from '../../constants/orderStatus';
 
 const TrackOrder = () => {
   const { orderNumber } = useParams();
@@ -81,8 +82,6 @@ const TrackOrder = () => {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap');
-
         .track-order {
           min-height: calc(100vh - 72px);
           padding: 28px 36px;
@@ -138,7 +137,7 @@ const TrackOrder = () => {
               <p style={{margin: '4px 0', fontSize: '14px'}}>Your payment was not accepted. Please cancel this order and place a new one with correct payment details.</p>
             </div>
           )}
-          {['Pending','Preparing'].includes(order.status) || order.payment_status === 'Rejected' ? (
+          {[ORDER_STATUS.PENDING, ORDER_STATUS.PREPARING].includes(order.status) || order.payment_status === PAYMENT_STATUS.REJECTED ? (
             <div style={{marginTop:8}}>
               <button className="btn-danger" onClick={() => setShowCancel(true)}>Cancel Order</button>
             </div>
@@ -163,7 +162,7 @@ const TrackOrder = () => {
           </div>
 
           {/* Order Status Timeline */}
-          {(orderLogs.length > 0 || order.status !== 'Pending') && (
+          {(orderLogs.length > 0 || order.status !== ORDER_STATUS.PENDING) && (
             <div style={{marginTop: 16}}>
               <h3>Order Timeline</h3>
               <div style={{display: 'flex', flexDirection: 'column', gap: 8}}>
@@ -178,9 +177,9 @@ const TrackOrder = () => {
                 {/* Status change logs */}
                 {orderLogs.map((log, idx) => (
                   <div key={idx} style={{display: 'flex', alignItems: 'center', gap: 8}}>
-                    <span style={{color: log.new_status === 'Cancelled' ? '#ff6b6b' : '#e8c97a'}}>&#9679;</span>
+                    <span style={{color: log.new_status === ORDER_STATUS.CANCELLED ? '#ff6b6b' : '#e8c97a'}}>&#9679;</span>
                     <span>
-                      {log.new_status === 'Cancelled' ? 'Order Cancelled' : `${log.old_status} → ${log.new_status}`}
+                      {log.new_status === ORDER_STATUS.CANCELLED ? 'Order Cancelled' : `${log.old_status} → ${log.new_status}`}
                     </span>
                     <small style={{color: 'rgba(255,255,255,0.4)'}}>
                       {log.changed_at ? new Date(log.changed_at).toLocaleString() : ''}
@@ -188,7 +187,7 @@ const TrackOrder = () => {
                   </div>
                 ))}
                 {/* Current status if no logs */}
-                {orderLogs.length === 0 && order.status !== 'Pending' && (
+                {orderLogs.length === 0 && order.status !== ORDER_STATUS.PENDING && (
                   <div style={{display: 'flex', alignItems: 'center', gap: 8}}>
                     <span style={{color: '#e8c97a'}}>&#9679;</span>
                     <span>Status: {order.status}</span>

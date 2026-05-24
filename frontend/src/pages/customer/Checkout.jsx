@@ -110,8 +110,6 @@ const Checkout = () => {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap');
-
         .checkout-container {
           min-height: calc(100vh - 72px);
           padding: 28px 36px;

@@ -3,6 +3,7 @@ import API from '../../services/api';
 import toast from 'react-hot-toast';
 import { AuthContext } from '../../context/AuthContext';
 import formatCurrencyPHP from '../../utils/currency';
+import { ALLOWED_TRANSITIONS, ORDER_STATUS, ORDER_TYPE } from '../../constants/orderStatus';
 
 const StaffDashboard = () => {
   const [orders, setOrders] = useState([]);
@@ -75,32 +76,20 @@ const StaffDashboard = () => {
     }
   };
 
-  const allowedTransitions = {
-    Pending: ['Preparing', 'Cancelled'],
-    Preparing: ['Ready for Pickup', 'Served', 'Out for Delivery', 'Cancelled'],
-    'Ready for Pickup': ['Completed', 'Cancelled'],
-    'Served': ['Completed', 'Cancelled'],
-    'Out for Delivery': ['Delivered'],
-    Delivered: ['Completed'],
-    Completed: [],
-    Cancelled: []
-  };
-
   const { user } = useContext(AuthContext);
 
   const nextActionsFor = (order) => {
-    const next = allowedTransitions[order.status] || [];
-    const orderType = order.order_type || 'Pickup';
-    // Filter out order-type-specific statuses that don't apply
+    const next = ALLOWED_TRANSITIONS[order.status] || [];
+    const orderType = order.order_type || ORDER_TYPE.PICKUP;
     return next.filter(s => {
-      if (s === 'Out for Delivery' || s === 'Delivered') {
-        return orderType === 'Delivery';
+      if (s === ORDER_STATUS.OUT_FOR_DELIVERY || s === ORDER_STATUS.DELIVERED) {
+        return orderType === ORDER_TYPE.DELIVERY;
       }
-      if (s === 'Ready for Pickup') {
-        return orderType === 'Pickup';
+      if (s === ORDER_STATUS.READY_FOR_PICKUP) {
+        return orderType === ORDER_TYPE.PICKUP;
       }
-      if (s === 'Served') {
-        return orderType === 'Dine-in';
+      if (s === ORDER_STATUS.SERVED) {
+        return orderType === ORDER_TYPE.DINE_IN;
       }
       return true;
     });
@@ -122,8 +111,6 @@ const StaffDashboard = () => {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap');
-
         .staff-dashboard { min-height: calc(100vh - 72px); padding:28px 36px; background: linear-gradient(180deg,#0a0806 0%, #0f0c09 100%); color: rgba(255,255,255,0.92); font-family: 'DM Sans', sans-serif }
         .staff-dashboard h1 { font-family:'Playfair Display', serif; color:#e8c97a; margin-bottom:12px }
 

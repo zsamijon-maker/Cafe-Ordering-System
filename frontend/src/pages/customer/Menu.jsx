@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import API from '../../services/api';
 import { CartContext } from '../../context/CartContext';
@@ -7,15 +7,35 @@ import formatCurrencyPHP from '../../utils/currency';
 
 const Menu = () => {
   const { addToCart } = useContext(CartContext);
+  const [search, setSearch] = useState('');
+  const [categoryId, setCategoryId] = useState('');
+
+  const queryParams = new URLSearchParams();
+  if (search) queryParams.set('search', search);
+  if (categoryId) queryParams.set('category_id', categoryId);
 
   const { data: products = [], isLoading, error } = useQuery({
-    queryKey: ['products'],
+    queryKey: ['products', search, categoryId],
     queryFn: async () => {
-      const res = await API.get('/products');
+      const qs = queryParams.toString();
+      const res = await API.get(`/products${qs ? `?${qs}` : ''}`);
       return res.data;
     },
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 60 * 5,
   });
+
+  const categories = useMemo(() => {
+    const cats = products
+      .filter(p => p.categories)
+      .reduce((acc, p) => {
+        const key = p.categories?.id || p.category_id;
+        if (key && !acc.find(c => c.id === key)) {
+          acc.push({ id: key, name: p.categories.name || 'Unknown' });
+        }
+        return acc;
+      }, []);
+    return cats;
+  }, [products]);
 
   // Show error toast if query fails
   if (error) {
@@ -45,7 +65,12 @@ const Menu = () => {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap');
+        .menu-filters { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+        .menu-filters input, .menu-filters select {
+          padding: 10px 14px; border-radius: 8px; background: rgba(255,255,255,0.04); border: 0.5px solid rgba(255,255,255,0.08);
+          color: rgba(255,255,255,0.9); font-family: 'DM Sans', sans-serif; font-size: 14px; flex: 1; min-width: 200px;
+        }
+        .menu-filters select { min-width: 160px; flex: 0 1 auto; }
 
         .menu-container {
           font-family: 'DM Sans', sans-serif;
@@ -156,6 +181,20 @@ const Menu = () => {
       <div className="menu-container">
         <div className="menu-content">
           <h1>Our Menu</h1>
+          <div className="menu-filters">
+            <input
+              type="text"
+              placeholder="Search menu..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
+            <select value={categoryId} onChange={e => setCategoryId(e.target.value)}>
+              <option value="">All Categories</option>
+              {categories.map(cat => (
+                <option key={cat.id} value={cat.id}>{cat.name}</option>
+              ))}
+            </select>
+          </div>
         <div className="product-grid">
           {products.map((product) => {
             const stock = product.stock ?? product.inventory ?? product.quantity_available ?? null;

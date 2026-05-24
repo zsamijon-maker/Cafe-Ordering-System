@@ -1,15 +1,26 @@
-import React, { createContext, useState } from 'react';
+import React, { createContext, useState, useEffect } from 'react';
 
-// Theme helper (exported for potential use in JSX styling)
-export const THEME = {
-  gold: '#e8c97a',
-  background: '#0f0c09',
-};
+const CART_STORAGE_KEY = 'cafe_cart';
 
 export const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
-  const [cart, setCart] = useState([]);
+  const [cart, setCart] = useState(() => {
+    try {
+      const saved = localStorage.getItem(CART_STORAGE_KEY);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
+    } catch {
+      // storage full or private mode
+    }
+  }, [cart]);
 
   const getStockFor = (product) => {
     return (

@@ -2,18 +2,7 @@ const supabase = require('../config/supabase');
 const { v4: uuidv4 } = require('uuid');
 const jwt = require('jsonwebtoken');
 const { cache } = require('../services/cache');
-
-// Allowed transitions and role permissions
-const allowedTransitions = {
-  Pending: ['Preparing', 'Cancelled'],
-  Preparing: ['Ready for Pickup', 'Served', 'Out for Delivery', 'Cancelled'],
-  'Ready for Pickup': ['Completed', 'Cancelled'],
-  'Served': ['Completed', 'Cancelled'],
-  'Out for Delivery': ['Delivered'],
-  Delivered: ['Completed'],
-  Completed: [],
-  Cancelled: []
-};
+const { ALLOWED_TRANSITIONS, ORDER_STATUS, PAYMENT_STATUS, ORDER_TYPE, DIGITAL_PAYMENT_METHODS, COD_METHODS, ROLE } = require('../constants');
 
 // Role permission matrix for specific transitions (empty = admin and staff)
 const transitionRoleRequirements = {};
@@ -217,10 +206,9 @@ const createOrder = async (req, res, next) => {
     }
 
     // Determine initial payment status
-    const digitalMethods = ['GCash', 'Maya', 'Card'];
     let payment_status = null;
-    if (digitalMethods.includes(payment_method)) payment_status = 'Pending Verification';
-    else if (payment_method === 'Cash on Delivery' || payment_method === 'Cash') payment_status = 'Paid';
+    if (DIGITAL_PAYMENT_METHODS.includes(payment_method)) payment_status = PAYMENT_STATUS.PENDING_VERIFICATION;
+    else if (COD_METHODS.includes(payment_method)) payment_status = PAYMENT_STATUS.PAID;
 
     // 1. Create Order
     const orderPayload = {
@@ -231,14 +219,14 @@ const createOrder = async (req, res, next) => {
       payment_status,
       payment_reference: payment_reference || null,
       payment_proof: payment_proof_url,
-      order_type: order_type || 'Pickup',
+      order_type: order_type || ORDER_TYPE.PICKUP,
       address: address || null,
       landmark: landmark || null,
       contact_number: contact_number || null,
       delivery_fee: delivery_fee || 0,
       notes: notes || null,
       table_number: table_number || null,
-      status: 'Pending'
+      status: ORDER_STATUS.PENDING
     };
 
     const { data: order, error: orderError } = await supabase
@@ -301,37 +289,33 @@ const updateOrderStatus = async (req, res, next) => {
 
     if (status === currentStatus) return res.json(order);
 
-    // validate allowed transition
-    const allowed = allowedTransitions[currentStatus] || [];
+    const allowed = ALLOWED_TRANSITIONS[currentStatus] || [];
     if (!allowed.includes(status)) {
       return res.status(400).json({ message: `Invalid status transition: ${currentStatus} -> ${status}` });
     }
 
     // Validate order type specific statuses
-    const orderType = order.order_type || 'Pickup';
-    if (status === 'Out for Delivery' || status === 'Delivered') {
-      if (orderType !== 'Delivery') {
+    const orderType = order.order_type || ORDER_TYPE.PICKUP;
+    if (status === ORDER_STATUS.OUT_FOR_DELIVERY || status === ORDER_STATUS.DELIVERED) {
+      if (orderType !== ORDER_TYPE.DELIVERY) {
         return res.status(400).json({ message: `Cannot use '${status}' status for ${orderType} orders` });
       }
     }
-    if (status === 'Ready for Pickup') {
-      if (orderType !== 'Pickup') {
+    if (status === ORDER_STATUS.READY_FOR_PICKUP) {
+      if (orderType !== ORDER_TYPE.PICKUP) {
         return res.status(400).json({ message: `Cannot use 'Ready for Pickup' status for ${orderType} orders` });
       }
     }
-    if (status === 'Served') {
-      if (orderType !== 'Dine-in') {
+    if (status === ORDER_STATUS.SERVED) {
+      if (orderType !== ORDER_TYPE.DINE_IN) {
         return res.status(400).json({ message: `Cannot use 'Served' status for ${orderType} orders` });
       }
     }
 
-    // Payment verification check - cannot proceed to Preparing without verified payment
-    const preparingStatuses = ['Preparing', 'Out for Delivery'];
-    if (preparingStatuses.includes(status) && order.payment_status !== 'Paid') {
+    const preparingStatuses = [ORDER_STATUS.PREPARING, ORDER_STATUS.OUT_FOR_DELIVERY];
+    if (preparingStatuses.includes(status) && order.payment_status !== PAYMENT_STATUS.PAID) {
       const paymentMethod = order.payment_method || '';
-      const codMethods = ['Cash on Delivery', 'Cash'];
-      // Allow if it's Cash payment (treated as Paid) or if payment is already verified
-      if (!codMethods.includes(paymentMethod)) {
+      if (!COD_METHODS.includes(paymentMethod)) {
         return res.status(400).json({
           message: 'Payment must be verified before preparing the order',
           payment_status: order.payment_status,
@@ -349,8 +333,8 @@ const updateOrderStatus = async (req, res, next) => {
 
     // prepare update payload
     const updatePayload = { status };
-    if (status === 'Out for Delivery') updatePayload.delivery_started_at = new Date().toISOString();
-    if (status === 'Delivered') updatePayload.delivered_at = new Date().toISOString();
+    if (status === ORDER_STATUS.OUT_FOR_DELIVERY) updatePayload.delivery_started_at = new Date().toISOString();
+    if (status === ORDER_STATUS.DELIVERED) updatePayload.delivered_at = new Date().toISOString();
 
     const { data: updatedRows, error: updateErr } = await supabase
       .from('orders')
@@ -361,8 +345,7 @@ const updateOrderStatus = async (req, res, next) => {
 
     const updatedOrder = updatedRows[0];
 
-    // Clear sales cache if order is marked as Completed
-    if (status === 'Completed' || currentStatus === 'Completed') {
+    if (status === ORDER_STATUS.COMPLETED || currentStatus === ORDER_STATUS.COMPLETED) {
       const keys = cache.keys();
       const salesKeys = keys.filter(k => k.startsWith('sales:report'));
       salesKeys.forEach(k => cache.del(k));
@@ -435,15 +418,8 @@ const cancelOrder = async (req, res, next) => {
       .single();
     if (fetchErr) return res.status(404).json({ message: 'Order not found' });
 
-    // Only allow cancel for certain statuses or allow admin/staff override
-    const cancellable = ['Pending', 'Preparing', 'Out for Delivery'];
-
-    // Also allow cancel if payment was rejected
-    if (order.payment_status === 'Rejected') {
-      isAllowed = true;
-    }
-
-    let isAllowed = cancellable.includes(order.status);
+    const cancellable = [ORDER_STATUS.PENDING, ORDER_STATUS.PREPARING, ORDER_STATUS.OUT_FOR_DELIVERY];
+    let isAllowed = cancellable.includes(order.status) || order.payment_status === PAYMENT_STATUS.REJECTED;
 
     // if request contains Authorization header, try to decode and check role
     let actingUserId = null;
@@ -456,7 +432,7 @@ const cancelOrder = async (req, res, next) => {
         actingUserId = decoded.id || decoded.userId || null;
         actingUserRole = decoded.role || null;
         // allow staff/admin to cancel regardless of current status
-        if (actingUserRole === 'admin' || actingUserRole === 'staff') isAllowed = true;
+        if (actingUserRole === ROLE.ADMIN || actingUserRole === ROLE.STAFF) isAllowed = true;
       } catch (e) {
         // invalid token - ignore and proceed with public rules
       }
@@ -468,7 +444,7 @@ const cancelOrder = async (req, res, next) => {
 
     const { data, error } = await supabase
       .from('orders')
-      .update({ status: 'Cancelled', cancellation_reason: reason || null, cancellation_time: new Date().toISOString() })
+      .update({ status: ORDER_STATUS.CANCELLED, cancellation_reason: reason || null, cancellation_time: new Date().toISOString() })
       .eq('id', id)
       .select()
       .single();
@@ -479,7 +455,7 @@ const cancelOrder = async (req, res, next) => {
       await supabase.from('order_logs').insert([{
         order_id: id,
         old_status: order.status,
-        new_status: 'Cancelled',
+        new_status: ORDER_STATUS.CANCELLED,
         changed_by: actingUserId,
         notes: reason || 'Cancelled by customer'
       }]);

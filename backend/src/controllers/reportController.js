@@ -1,5 +1,6 @@
 const supabase = require('../config/supabase');
 const { cache, CACHE_TTL } = require('../services/cache');
+const { ORDER_STATUS } = require('../constants');
 
 const getSalesReport = async (req, res, next) => {
   try {
@@ -15,7 +16,7 @@ const getSalesReport = async (req, res, next) => {
     let query = supabase
       .from('orders')
       .select('total_amount, created_at')
-      .eq('status', 'Completed');
+      .eq('status', ORDER_STATUS.COMPLETED);
 
     if (start_date) {
       query = query.gte('created_at', start_date);
